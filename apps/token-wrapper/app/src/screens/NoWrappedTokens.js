@@ -42,13 +42,13 @@ const NoWrappedTokens = React.memo(function NoWrappedTokens({
             </div>
           )
         }
-        action={
-          onWrapTokens && (
-            <Button wide mode="strong" onClick={onWrapTokens}>
-              Wrap tokens
-            </Button>
-          )
-        }
+        // action={
+        //   onWrapTokens && (
+        //     <Button wide mode="strong" onClick={onWrapTokens}>
+        //       Wrap tokens
+        //     </Button>
+        //   )
+        // }
         illustration={
           <img
             css={`

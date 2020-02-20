@@ -32,6 +32,10 @@ contract TokenWrapper is IERC20WithCheckpointing, IForwarder, IsContract, ERC20V
     using Checkpointing for Checkpointing.History;
     using CheckpointingHelpers for uint256;
 
+    // Probably throw away the managers for these permissions to prevent the Rewards Pool becoming unbalanced.
+    bytes32 public constant DEPOSIT_TO_ROLE = keccak256("DEPOSIT_TO_ROLE");
+    bytes32 public constant WITHDRAW_FOR_ROLE = keccak256("WITHDRAW_FOR_ROLE");
+
     string private constant ERROR_TOKEN_NOT_CONTRACT = "TW_TOKEN_NOT_CONTRACT";
     string private constant ERROR_DEPOSIT_AMOUNT_ZERO = "TW_DEPOSIT_AMOUNT_ZERO";
     string private constant ERROR_TOKEN_TRANSFER_FROM_FAILED = "TW_TOKEN_TRANSFER_FROM_FAILED";
@@ -75,34 +79,34 @@ contract TokenWrapper is IERC20WithCheckpointing, IForwarder, IsContract, ERC20V
      *      storage format.
      * @param _amount Amount to wrap
      */
-    function deposit(uint256 _amount) external isInitialized {
+    function depositTo(uint256 _amount, address _to) external isInitialized auth(DEPOSIT_TO_ROLE) {
         require(_amount > 0, ERROR_DEPOSIT_AMOUNT_ZERO);
 
         // Fetch the outside ERC20 tokens
         require(depositedToken.safeTransferFrom(msg.sender, address(this), _amount), ERROR_TOKEN_TRANSFER_FROM_FAILED);
 
         // Then increase our wrapped token accounting
-        uint256 currentBalance = balanceOf(msg.sender);
+        uint256 currentBalance = balanceOf(_to);
         uint256 newBalance = currentBalance.add(_amount);
 
         uint256 currentTotalSupply = totalSupply();
         uint256 newTotalSupply = currentTotalSupply.add(_amount);
 
         uint64 currentBlock = getBlockNumber64();
-        balancesHistory[msg.sender].addCheckpoint(currentBlock, newBalance.toUint192Value());
+        balancesHistory[_to].addCheckpoint(currentBlock, newBalance.toUint192Value());
         totalSupplyHistory.addCheckpoint(currentBlock, newTotalSupply.toUint192Value());
 
-        emit Deposit(msg.sender, _amount);
+        emit Deposit(_to, _amount);
     }
 
     /**
      * @notice Unwrap `@tokenAmount(self.depositedToken(): address, _amount)`
      * @param _amount Amount to unwrap
      */
-    function withdraw(uint256 _amount) external isInitialized {
+    function withdrawFor(uint256 _amount, address _forAddress) external isInitialized auth(WITHDRAW_FOR_ROLE) {
         require(_amount > 0, ERROR_WITHDRAW_AMOUNT_ZERO);
 
-        uint256 currentBalance = balanceOf(msg.sender);
+        uint256 currentBalance = balanceOf(_forAddress);
         require(_amount <= currentBalance, ERROR_INVALID_WITHDRAW_AMOUNT);
 
         // Decrease our wrapped token accounting
@@ -112,13 +116,13 @@ contract TokenWrapper is IERC20WithCheckpointing, IForwarder, IsContract, ERC20V
         uint256 newTotalSupply = currentTotalSupply.sub(_amount);
 
         uint64 currentBlock = getBlockNumber64();
-        balancesHistory[msg.sender].addCheckpoint(currentBlock, newBalance.toUint192Value());
+        balancesHistory[_forAddress].addCheckpoint(currentBlock, newBalance.toUint192Value());
         totalSupplyHistory.addCheckpoint(currentBlock, newTotalSupply.toUint192Value());
 
         // Then return ERC20 tokens
-        require(depositedToken.safeTransfer(msg.sender, _amount), ERROR_TOKEN_TRANSFER_FAILED);
+        require(depositedToken.safeTransfer(_forAddress, _amount), ERROR_TOKEN_TRANSFER_FAILED);
 
-        emit Withdrawal(msg.sender, _amount);
+        emit Withdrawal(_forAddress, _amount);
     }
 
     // ERC20 fns - note that this token is a non-transferrable "view-only" implementation.

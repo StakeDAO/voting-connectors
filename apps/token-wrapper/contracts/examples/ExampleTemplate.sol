@@ -53,7 +53,7 @@ contract ExampleTemplate is TemplateBase {
         acl.createPermission(this, dao, dao.APP_MANAGER_ROLE(), this);
 
         address root = msg.sender;
-        bytes32 tokenWrapperAppId = keccak256(abi.encodePacked(apmNamehash("open"), keccak256("token-wrapper")));
+        bytes32 tokenWrapperAppId = keccak256(abi.encodePacked(apmNamehash("open"), keccak256("token-wrapper-sc")));
         bytes32 votingAppId = apmNamehash("voting");
 
         TokenWrapper tokenWrapper = TokenWrapper(dao.newAppInstance(tokenWrapperAppId, latestVersionAppBase(tokenWrapperAppId)));
