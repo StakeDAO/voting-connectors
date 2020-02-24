@@ -44,17 +44,17 @@ const AppHeader = React.memo(function AppHeader({ tokenSymbol, onWrapHolder }) {
           </div>
         </div>
       }
-      secondary={
-        onWrapHolder && (
-          <Button
-            mode="strong"
-            label="Wrap tokens"
-            icon={<IconPlus />}
-            onClick={onWrapHolder}
-            display={layoutName === 'small' ? 'icon' : 'label'}
-          />
-        )
-      }
+      // secondary={
+      //   onWrapHolder && (
+      //     <Button
+      //       mode="strong"
+      //       label="Wrap tokens"
+      //       icon={<IconPlus />}
+      //       onClick={onWrapHolder}
+      //       display={layoutName === 'small' ? 'icon' : 'label'}
+      //     />
+      //   )
+      // }
     />
   )
 })
